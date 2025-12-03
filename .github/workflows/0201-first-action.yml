@@ -1,10 +1,14 @@
-name: 0201-first-action
-on: workflow_dispatch
+name: 0201-first-action             # Workflow 的名稱，出現在 GitHub Actions 介面中
+
+on: workflow_dispatch               # 使用者手動觸發（Run workflow 按鈕）
+
 jobs:
-  first-job:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print greeting
-        run: echo "Hello World!"
-      - name: Print goodbye
-        run: echo "Done - bye!"
+  first-job:                        # Job 名稱，可自訂，用來分辨不同工作
+    runs-on: ubuntu-latest          # 指定要使用 GitHub 提供的 Ubuntu Runner
+
+    steps:                          # 這個 Job 裡要執行的所有步驟
+      - name: Print greeting        # 步驟名稱（僅描述用途）
+        run: echo "Hello World!"    # 實際執行的 shell 指令
+
+      - name: Print goodbye         # 第二個步驟
+        run: echo "Done - bye!"     # 輸出結束訊息

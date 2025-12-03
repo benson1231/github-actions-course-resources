@@ -1,40 +1,40 @@
-name: 0203-deployment
-on: [push, workflow_dispatch]
+name: 0203-deployment   # Workflow 名稱（顯示在 GitHub Actions 介面）
+on: [push, workflow_dispatch]   # push 或手動執行 workflow_dispatch 時觸發
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  test:                        # 第一個 Job：負責測試
+    runs-on: ubuntu-latest     # 使用 GitHub 提供的 Ubuntu Runner
     defaults:
       run:
-        shell: bash
-        working-directory: "./02_Basics/03_Finished_Project"   
+        shell: bash            # 所有 run 指令使用 bash
+        working-directory: "./02_Basics/03_Finished_Project"   # 在子資料夾執行 npm 指令
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3          # 將 repo 原始碼 checkout 下來
       - name: Install NodeJS
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v3        # 安裝 Node.js
         with:
-          node-version: 18
+          node-version: 18                 # 使用 Node 18 版本
       - name: Install dependencies
-        run: npm ci
+        run: npm ci                        # 安裝依賴（CI 推薦用 npm ci）
       - name: Run tests
-        run: npm test
-  deploy:
-    needs: test
+        run: npm test                      # 執行測試腳本
+  deploy:                                  # 第二個 Job：負責部署（僅在 test 成功後執行）
+    needs: test                            # 依賴 test Job，test 不成功則不跑 deploy
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-        working-directory: "./02_Basics/03_Finished_Project"
+        working-directory: "./02_Basics/03_Finished_Project"   # 與 test 一樣，在子資料夾執行
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3          # 再次 checkout，因為每個 job 使用獨立機器
       - name: Install NodeJS
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 18                 # 一樣使用 Node 18
       - name: Install dependencies
-        run: npm ci
+        run: npm ci                        # 再次安裝依賴（不同 Job 需要重新安裝）
       - name: Build project
-        run: npm run build
+        run: npm run build                 # 建置專案（例如產生 dist/）
       - name: Deploy
-        run: echo "Deploying ..."
+        run: echo "Deploying ..."          # 模擬部署動作（日後可換成真實部署指令）

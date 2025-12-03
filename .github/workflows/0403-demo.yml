@@ -1,72 +1,73 @@
 name: 0403-demo website
 on:
-  push:
+  push:                             # 只要有 push 發生在下列分支就觸發
     branches:
-      - main
+      - main                        # 目前只監聽 main 分支
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  test:                             # 測試 Job
+    runs-on: ubuntu-latest          # 在 GitHub 提供的 Ubuntu Runner 上執行
     defaults:
       run:
         shell: bash
-        working-directory: "./04_Artifacts_Outputs/03_Finished_Project" 
+        working-directory: "./04_Artifacts_Outputs/03_Finished_Project"    # 所有 run: 都在這個子資料夾執行
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3   # 把整個 repo 的程式碼 checkout 到 Runner 上
       - name: Cache dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v3      # 對 node_modules/npm cache 做快取，加速之後的 npm ci
         with:
-          path: ~/.npm
-          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.npm              # npm 下載的快取位置
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}     # 依 package-lock.json 內容產生 key
       - name: Install dependencies
-        run: npm ci
+        run: npm ci                 # 安裝依賴（乾淨模式，適合 CI）
       - name: Lint code
-        run: npm run lint
+        run: npm run lint           # 跑 ESLint / Lint 檢查程式碼
       - name: Test code
-        run: npm run test
-  build:
-    needs: test
-    runs-on: ubuntu-latest
+        run: npm run test           # 跑單元測試 / 自動化測試
+  build:                            # Build Job
+    needs: test                     # 必須等 test Job 成功後才會執行
+    runs-on: ubuntu-latest       
     defaults:
       run:
         shell: bash
-        working-directory: "./04_Artifacts_Outputs/03_Finished_Project"
-    outputs:
-      script-file: ${{ steps.publish.outputs.script-file }}
+        working-directory: "./04_Artifacts_Outputs/03_Finished_Project"        # 一樣在子資料夾裡執行
+    outputs:                        # 從 build Job 對外輸出一個值（script-file），給後面的 Job 使用
+      script-file: ${{ steps.publish.outputs.script-file }}                    # 取自 id: publish 這個 Step 的輸出
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3   # 這裡是另一個 Job，要再 checkout 一次
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
           path: ~/.npm
           key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
-        run: npm ci
+        run: npm ci                 # 再次安裝（因為是不同 Job / 不同 Runner）
       - name: Build website
-        run: npm run build
+        run: npm run build          # 建置前端專案，產生 dist/ 資料夾
       - name: Publish JS filename
-        id: publish
+        id: publish                 # 這個 step 的 id，供 outputs 使用
         run: find dist/assets/*.js -type f -execdir echo 'script-file={}' >> $GITHUB_OUTPUT ';'
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4       # 上傳建置產生的檔案，供其他 Job 使用
         with:
-          name: dist-files
-          path: ./04_Artifacts_Outputs/03_Finished_Project/dist
+          name: dist-files          # Artifact 名稱
+          path: ./04_Artifacts_Outputs/03_Finished_Project/dist     # 要打包上傳的實際路徑
+          # 也可以改成多路徑：
           # path: |
           #   dist
           #   package.json
   deploy:
-    needs: build
+    needs: build                    # 等 build Job 成功後才執行
     runs-on: ubuntu-latest
     steps:
       - name: Get build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4      # 下載上一個 Job 上傳的 dist-files
         with:
           name: dist-files
       - name: Output contents
-        run: ls
+        run: ls                                 # 在 repo root 底下列出目前檔案（可以改成 ls -R . 看全部）
       - name: Output filename
-        run: echo "${{ needs.build.outputs.script-file }}"
+        run: echo "${{ needs.build.outputs.script-file }}"     # 印出 build Job 計算出的 JS 檔名
       - name: Deploy
-        run: echo "Deploying..."
+        run: echo "Deploying..."                # 這裡目前只是示範，實際可以改成 rsync / scp / ssh / cloud deploy 指令

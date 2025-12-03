@@ -1,22 +1,30 @@
-name: 0205-deployment1
-on: push
+name: 0205-deployment1   # Workflow 名稱（顯示在 GitHub Actions 頁面）
+on: push                 # 每次 push 到任何分支時觸發
+
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  deploy:                # 單一 Job：負責 Lint / Test / Build / Deploy
+    runs-on: ubuntu-latest   # GitHub 提供的 Ubuntu Runner
+
     defaults:
       run:
-        shell: bash
-        working-directory: "./02_Basics/05_Practice_Project(Finished)"   
+        shell: bash          # 所有 run 指令使用 bash
+        working-directory: "./02_Basics/05_Practice_Project(Finished)"   # 在此子資料夾執行 npm 指令
+
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3          # Checkout 專案原始碼
+
       - name: Install dependencies
-        run: npm ci
+        run: npm ci                        # 安裝專案依賴（CI 推薦用 npm ci）
+
       - name: Lint
-        run: npm run lint
+        run: npm run lint                  # 執行 Lint 檢查
+
       - name: Test code
-        run: npm run test
+        run: npm run test                  # 執行測試
+
       - name: Build code
-        run: npm run build
+        run: npm run build                 # 建置專案（產生 dist/）
+
       - name: Deploy code
-        run: echo "Deploying..."
+        run: echo "Deploying..."           # 模擬部署；日後可換成真正部署指令

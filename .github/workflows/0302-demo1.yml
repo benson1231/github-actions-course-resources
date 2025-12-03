@@ -1,39 +1,46 @@
-name: 0302-demo1
+name: 0302-demo1   # Workflow 名稱
+
 on:
-  pull_request:
+  pull_request:    # PR 建立時觸發（限 types=opened）
     types:
       - opened
     branches:
-      - main # main
-      - 'dev-*' # dev-new dev-this-is-new
-      - 'feat/**' # feat/new feat/new/button
-  workflow_dispatch:
-  push:
+      - main       # 僅限 main 分支的 PR
+      - 'dev-*'    # dev- 開頭的 PR（如 dev-new）
+      - 'feat/**'  # feat/ 目錄下的 PR（如 feat/new/button）
+  workflow_dispatch:   # 可手動觸發
+  push:                # push 事件也會觸發
     branches:
-      - main # main
-      - 'dev-*' # dev-new dev-this-is-new
-      - 'feat/**' # feat/new feat/new/button
-      # developer-1
+      - main           # push 到 main 執行
+      - 'dev-*'        # push 到 dev-* 執行
+      - 'feat/**'      # push 到 feat/** 執行
+      # developer-1    # 註解：可用來提醒是哪位開發者建立規範
     paths-ignore:
-      - '.github/workflows/*'
+      - '.github/workflows/*'   # 修改 workflow 檔案不觸發（避免 CI 無限循環）
+
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  deploy:                 # 單一 Job：負責測試與部署
+    runs-on: ubuntu-latest  # GitHub 提供的 Ubuntu Runner
     defaults:
       run:
         shell: bash
-        working-directory: "./03_Events/02_Finished_Project"  
+        working-directory: "./03_Events/02_Finished_Project"  # 讓所有 npm 指令在此子資料夾執行
     steps:
       - name: Get code
-        uses: actions/checkout@v3      
+        uses: actions/checkout@v3        # 抓取 repo 原始碼
+
       - name: Output event data
-        run: |
+        run: |                           # 輸出事件內容（用於 debug）
           echo '${{ toJSON(github) }}'
+
       - name: Install dependencies
-        run: npm ci
+        run: npm ci                      # 安裝依賴（CI 推薦用 npm ci）
+
       - name: Test code
-        run: npm run test
+        run: npm run test                # 執行測試
+
       - name: Build code
-        run: npm run build
+        run: npm run build               # 執行 build（通常產生 dist/）
+
       - name: Deploy project
-        run: echo "Deploying..."
+        run: echo "Deploying..."         # 模擬部署流程

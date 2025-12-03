@@ -1,9 +1,11 @@
-name: output-information
-on: workflow_dispatch
+name: output-information   # Workflow 名稱（顯示在 Actions 頁面）
+
+on: workflow_dispatch       # 手動觸發 workflow（Run workflow 按鈕）
+
 jobs:
-  info:
-    runs-on: ubuntu-latest
+  info:                     # 單一 Job：用來輸出 GitHub Context
+    runs-on: ubuntu-latest  # 使用 GitHub 提供的 Ubuntu Runner
     steps:
       - name: Output GitHub context
-        run: |
-          echo '${{ toJSON(github) }}'
+        run: |              # 將整個 github 物件序列化成 JSON 並印出（用來 debug 事件資料）
+          echo '${{ toJSON(github) }}'  

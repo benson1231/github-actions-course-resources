@@ -1,46 +1,49 @@
-name: 0205-deployment2
-on: push
+name: 0205-deployment2   # Workflow 名稱
+on: push                 # 每次 push 時觸發 CI/CD pipeline
+
 jobs:
-  lint:
-    runs-on: ubuntu-latest
+  lint:                  # 第一階段：Lint 檢查
+    runs-on: ubuntu-latest   # 使用 Ubuntu Runner
     defaults:
       run:
-        shell: bash
-        working-directory: "./02_Basics/05_Practice_Project(Finished)"  
+        shell: bash          # 使用 bash 執行命令
+        working-directory: "./02_Basics/05_Practice_Project(Finished)"  # 在指定資料夾執行
     steps: 
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3      # Checkout 專案原始碼
       - name: Install dependencies
-        run: npm ci
+        run: npm ci                    # 安裝依賴
       - name: Lint
-        run: npm run lint
-  test:
-    needs: lint
+        run: npm run lint              # 執行 Lint 檢查
+
+  test:                 # 第二階段：執行測試
+    needs: lint         # 需等 lint Job 成功後才執行
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-        working-directory: "./02_Basics/05_Practice_Project(Finished)"  
+        working-directory: "./02_Basics/05_Practice_Project(Finished)"
     steps: 
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3      # 再次 checkout（每個 job 是不同 runner）
       - name: Install dependencies
-        run: npm ci
+        run: npm ci                    # 再安裝依賴（jobs 不共享 node_modules）
       - name: Test code
-        run: npm run test
-  deploy:
-    needs: test
+        run: npm run test              # 執行測試
+
+  deploy:               # 第三階段：Build + Deploy
+    needs: test         # 測試通過才部署
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-        working-directory: "./02_Basics/05_Practice_Project(Finished)"  
+        working-directory: "./02_Basics/05_Practice_Project(Finished)"
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3      # 第三次 checkout（不同 job 必須重新抓 code）
       - name: Install dependencies
-        run: npm ci
+        run: npm ci                    # 再次安裝依賴
       - name: Build code
-        run: npm run build
+        run: npm run build             # Build 專案（通常產生 dist/）
       - name: Deploy code
-        run: echo "Deploying..."
+        run: echo "Deploying..."       # 模擬部署；可替換成實際部署流程
