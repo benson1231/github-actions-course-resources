@@ -6,6 +6,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./04_Artifacts_Outputs/03_Finished_Project" 
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -23,6 +27,10 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./04_Artifacts_Outputs/03_Finished_Project"
     outputs:
       script-file: ${{ steps.publish.outputs.script-file }}
     steps:
@@ -51,6 +59,10 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./04_Artifacts_Outputs/03_Finished_Project"
     steps:
       - name: Get build artifacts
         uses: actions/download-artifact@v3
