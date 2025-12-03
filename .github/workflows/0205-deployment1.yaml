@@ -1,4 +1,4 @@
-name: Deployment Exercise 1
+name: 0205-deployment1
 on: push
 jobs:
   deploy:

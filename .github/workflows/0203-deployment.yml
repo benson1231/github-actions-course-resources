@@ -1,14 +1,12 @@
-name: Deploy Project
+name: 0203-deployment
 on: [push, workflow_dispatch]
 jobs:
   test:
     runs-on: ubuntu-latest
-
     defaults:
       run:
         shell: bash
         working-directory: "./02_Basics/03_Finished_Project"   
-
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -23,12 +21,10 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-
     defaults:
       run:
         shell: bash
         working-directory: "./02_Basics/03_Finished_Project"
-
     steps:
       - name: Get code
         uses: actions/checkout@v3
