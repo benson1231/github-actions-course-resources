@@ -1,9 +1,12 @@
 name: Deployment Exercise 1
 on: push
-working-directory: "./02_Basics/05_Practice_Project(Finished)"   
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./02_Basics/05_Practice_Project(Finished)"   
     steps:
       - name: Get code
         uses: actions/checkout@v3
