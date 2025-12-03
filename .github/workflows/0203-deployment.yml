@@ -7,7 +7,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: "./02 Basics/03 Finished Project"
+        working-directory: "./02_Basics/03_Finished_Project"   
 
     steps:
       - name: Get code
@@ -27,7 +27,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: "./02 Basics/03 Finished Project"
+        working-directory: "./02_Basics/03_Finished_Project"
 
     steps:
       - name: Get code
