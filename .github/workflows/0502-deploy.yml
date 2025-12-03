@@ -10,6 +10,10 @@ jobs:
   test:
     environment: testing
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./05_Environment_Variables_Secrets/02_Finished_Project" 
     env:
       MONGODB_CLUSTER_ADDRESS: cluster0.ntrwp.mongodb.net
       MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
