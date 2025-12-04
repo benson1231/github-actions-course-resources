@@ -39,6 +39,10 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./05_Environment_Variables_Secrets/02_Finished_Project" 
     steps:
       - name: Output information
         env:
