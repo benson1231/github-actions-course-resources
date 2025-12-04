@@ -1,4 +1,4 @@
-name: 0602-use-reuse
+name: 0602-execution-flow
 on:
   push:
     branches:
@@ -6,6 +6,10 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./06_Execution_Flow/02_Finished_Project" 
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -22,6 +26,10 @@ jobs:
         run: npm run lint
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./06_Execution_Flow/02_Finished_Project" 
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -46,6 +54,10 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./06_Execution_Flow/02_Finished_Project" 
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -68,21 +80,28 @@ jobs:
           path: dist
   deploy:
     needs: build
-    uses: ./.github/workflows/reusable.yml
-    with:
-      artifact-name: dist-files
-    # secrets:
-      # some-secret: ${{ secrets.some-secret }}
-  print-deploy-result:
-    needs: deploy
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./06_Execution_Flow/02_Finished_Project" 
     steps:
-      - name: Print deploy output
-        run: echo "${{ needs.deploy.outputs.result }}"
+      - name: Get build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-files
+      - name: Output contents
+        run: ls
+      - name: Deploy
+        run: echo "Deploying..."
   report:
     needs: [lint, deploy]
     if: failure()
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./06_Execution_Flow/02_Finished_Project" 
     steps:
       - name: Output information
         run: | 
