@@ -47,10 +47,10 @@ jobs:
         run: npm run test
       - name: Upload test report
         if: failure() && steps.run-tests.outcome == 'failure'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-report
-          path: test.json
+          path: ./06_Execution_Flow/02_Finished_Project/test.json
   build:
     needs: test
     runs-on: ubuntu-latest
@@ -74,13 +74,13 @@ jobs:
         id: build-website
         run: npm run build
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist-files
-          path: dist
+          path: ./06_Execution_Flow/02_Finished_Project/dist
   deploy:
     needs: build
-    uses: ./.github/workflows/reusable.yml
+    uses: ../../.github/workflows/0602-reusable.yml
     with:
       artifact-name: dist-files
     # secrets:
