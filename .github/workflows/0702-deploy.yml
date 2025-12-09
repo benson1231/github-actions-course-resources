@@ -11,6 +11,10 @@ jobs:
   test:
     environment: testing
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./07_Containers/02_Finished_Project" 
     # container:
     #   image: node:16
     env:
@@ -47,6 +51,10 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: "./07_Containers/02_Finished_Project" 
     steps:
       - name: Output information
         env:
