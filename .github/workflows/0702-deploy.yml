@@ -56,6 +56,8 @@ jobs:
         shell: bash
         working-directory: "./07_Containers/02_Finished_Project" 
     steps:
+      - name: Get Code
+        uses: actions/checkout@v3
       - name: Output information
         env:
           PORT: 3000
