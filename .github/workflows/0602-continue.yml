@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-report
-          path: test.json
+          path: ./06_Execution_Flow/02_Finished_Project/test.json
   build:
     needs: test
     runs-on: ubuntu-latest
