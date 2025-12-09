@@ -1,0 +1,1 @@
+Slide derived from [academind/github-actions-course-resources](https://github.com/academind/github-actions-course-resources/blob/main/Slides/github-actions.pdf)
