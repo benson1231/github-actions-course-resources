@@ -15,8 +15,8 @@ jobs:
       run:
         shell: bash
         working-directory: "./07_Containers/02_Finished_Project" 
-    # container:
-    #   image: node:16
+    container:
+      image: node:16
     env:
       MONGODB_CONNECTION_PROTOCOL: mongodb
       MONGODB_CLUSTER_ADDRESS: 127.0.0.1:27017
