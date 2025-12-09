@@ -88,10 +88,6 @@ jobs:
   print-deploy-result:
     needs: deploy
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: "./06_Execution_Flow/02_Finished_Project" 
     steps:
       - name: Print deploy output
         run: echo "${{ needs.deploy.outputs.result }}"
