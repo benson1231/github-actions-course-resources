@@ -80,7 +80,7 @@ jobs:
           path: ./06_Execution_Flow/02_Finished_Project/dist
   deploy:
     needs: build
-    uses: ../../.github/workflows/0602-reusable.yml
+    uses: ./.github/workflows/0602-reusable.yml
     with:
       artifact-name: dist-files
     # secrets:
