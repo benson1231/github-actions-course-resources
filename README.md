@@ -1,4 +1,4 @@
-> This material is from `https://www.udemy.com/course/github-actions-the-complete-guide/` created by Maximilian Schwarzmüller
+> This material is from [Maximilian Schwarzmüller's udemy course](https://www.udemy.com/course/github-actions-the-complete-guide)
 
 # GitHub Actions Course — Workflows & Documentation Overview
 
@@ -6,6 +6,21 @@ This repository is a complete **GitHub Actions learning project**, containing pr
 It is designed for developers who want to understand GitHub Actions from basics to advanced concepts.
 
 ---
+
+# 🔐 Add Secrets to the github 
+
+we need four secrets to run pipeline correctly, add them into your github action secrets
+
+[how to add secrets to github action](./docs/Secrets.md#️-2-如何建立-repository-secrets)
+
+- MONGODB_USERNAME
+- MONGODB_PASSWORD
+- AWS_ACCESS_KEY_ID
+- AWS_SECRET_ACCESS_KEY
+
+![Secrets](./img/secret.png)
+
+
 
 # 🚀 Available Workflows
 
