@@ -41,7 +41,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-report
-          path: test.json
+          path: ./08_Custom_Actions/03_Finished_Project/test.json
   build:
     needs: test
     runs-on: ubuntu-latest
@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist-files
-          path: dist
+          path: ./08_Custom_Actions/03_Finished_Project/dist
   deploy:
     permissions:
       id-token: write
@@ -78,7 +78,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: dist-files
-          path: ./dist
+          path: ./08_Custom_Actions/03_Finished_Project/dist
       - name: Output contents
         run: ls
       - name: Deploy site
