@@ -1,4 +1,4 @@
-name: output-information   # Workflow 名稱（顯示在 Actions 頁面）
+name: 0000-output-information   # Workflow 名稱（顯示在 Actions 頁面）
 
 on: workflow_dispatch       # 手動觸發 workflow（Run workflow 按鈕）
 
