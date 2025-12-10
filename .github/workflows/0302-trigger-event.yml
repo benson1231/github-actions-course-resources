@@ -1,4 +1,4 @@
-name: 0302-demo1   # Workflow 名稱
+name: 0302-trigger-event   # Workflow 名稱
 
 on:
   pull_request:    # PR 建立時觸發（限 types=opened）

@@ -1,4 +1,4 @@
-name: 0702-deploy
+name: 0702-services-container
 on:
   push:
     branches:

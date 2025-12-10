@@ -63,7 +63,7 @@ GitHub 會自動遮罩（mask）所有 Secret，不會顯示在 log 中。
 
 📸 UI 位置示意圖：
 
-![GitHub Secrets](../../docs/secret.png)
+![GitHub Secrets](../img/secret.png)
 
 ---
 

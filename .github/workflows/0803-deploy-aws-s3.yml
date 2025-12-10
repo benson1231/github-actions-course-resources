@@ -1,4 +1,4 @@
-name: 0803-deploy
+name: 0803-deploy-aws-s3
 on:
   push:
     branches:
