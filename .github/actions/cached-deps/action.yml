@@ -22,6 +22,7 @@ runs:
     - name: Install dependencies
       id: install
       if: steps.cache.outputs.cache-hit != 'true' || inputs.caching != 'true'
+      working-directory: ./08_Custom_Actions/03_Finished_Project
       run: |
         pwd
         ls -al
