@@ -1,4 +1,4 @@
-# Download slide made from [academind/github-actions-course-resources](https://github.com/academind/github-actions-course-resources/blob/main/Slides/github-actions.pdf)
+> Download slide made from [academind/github-actions-course-resources](https://github.com/academind/github-actions-course-resources/blob/main/Slides/github-actions.pdf)
 
 # GitHub Actions 基本架構（Workflow Skeleton）
 
