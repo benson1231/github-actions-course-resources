@@ -12,6 +12,8 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: pwd
+      run: pwd
     - name: Cache dependencies
       if: inputs.caching == 'true'
       id: cache
