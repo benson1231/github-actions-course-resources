@@ -88,8 +88,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         with:
-          bucket: gha-security-hosting-demo
-          dist-folder: ./dist
+          bucket: gha-security-hosting-demo-benson
+          dist-folder: ./08_Custom_Actions/03_Finished_Project/dist
           # bucket-region: us-east-2
       - name: Output information
         run: |
