@@ -1,51 +1,51 @@
-# GitHub Actions Secrets 使用指南
+# GitHub Actions Secrets Guide
 
-GitHub Actions Secrets 用於安全儲存敏感資訊，例如：
+GitHub Actions **Secrets** provide a secure mechanism for storing sensitive information such as:
 
 * API keys
-* AWS IAM Access Keys
+* AWS IAM access keys
 * Database passwords
-* Tokens（如 GitHub Token, Slack Token）
+* OAuth / JWT tokens
+* Slack / Discord webhooks
 
-本指南將介紹：
+This guide explains:
 
-1. 什麼是 GitHub Actions Secrets
-2. 如何建立 Repository Secrets
-3. 如何在 Workflow 中使用 Secrets
-4. 官方文件連結
-
----
-
-## 🔐 1. 什麼是 GitHub Actions Secrets？
-
-GitHub Actions Secrets 是一種 **加密儲存機制**，提供以下功能：
-
-* 儲存敏感資訊且不暴露在程式碼中
-* 在 workflow runtime 解密
-* 在 log 中自動遮蔽（masking）
-
-Secrets 只能被 Actions 使用，無法在 Repo UI 中查看內容。
-
-官方說明：
-👉 [https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions)
+1. What GitHub Actions Secrets are
+2. How to create repository secrets
+3. How to use secrets in workflows
+4. Best practices
+5. Official documentation references
 
 ---
 
-## 🏗️ 2. 如何建立 Repository Secrets
+## 🔐 1. What Are GitHub Actions Secrets?
 
-### 步驟：
+GitHub Actions Secrets are **encrypted, write-only values** that you can safely use in workflows without exposing them in your repository.
 
-1. 打開 GitHub repository
-2. 點選 **Settings**
-3. 左側選單 → **Secrets and variables** → **Actions**
-4. 按下 **New repository secret**
-5. 填入：
+Key properties:
 
-   * **Name**（全部大寫，例如：`AWS_ACCESS_KEY_ID`）
-   * **Value**（密鑰內容）
-6. 儲存即可
+* Secrets are **encrypted at rest and during runtime**.
+* Their values **cannot be viewed** after creation—only overwritten.
+* Secrets are **masked in logs**, preventing accidental exposure.
+* Only workflows with permission can access them.
 
-常見 Secrets 名稱示例：
+Official docs → [https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions)
+
+---
+
+## 🏗️ 2. How to Create Repository Secrets
+
+1. Go to your GitHub repository.
+2. Navigate to **Settings**.
+3. Go to **Secrets and variables → Actions**.
+4. Click **New repository secret**.
+5. Enter:
+
+   * **Name** (uppercase, e.g., `AWS_ACCESS_KEY_ID`)
+   * **Value** (the key or password)
+6. Save. ![Secrets](../img/secret.png)
+
+### Common secret names
 
 ```
 AWS_ACCESS_KEY_ID
@@ -53,21 +53,21 @@ AWS_SECRET_ACCESS_KEY
 SLACK_WEBHOOK_URL
 DATABASE_PASSWORD
 JWT_SECRET
+API_TOKEN
 ```
 
-官方文件：
-👉 [https://docs.github.com/en/actions/security-guides/encrypted-secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
+Official docs → [https://docs.github.com/en/actions/security-guides/encrypted-secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
 
 ---
 
-## ⚙️ 3. 如何在 GitHub Actions Workflow 中使用 Secrets
+## ⚙️ 3. Using Secrets in GitHub Actions Workflows
 
-你可以在 workflow 中透過 `${{ secrets.SECRET_NAME }}` 存取 secrets。
+Secrets are accessed via `${{ secrets.SECRET_NAME }}`.
 
-### 🎯 範例：部署 AWS S3
+### Example: Deploying to AWS S3
 
 ```yaml
-name: deploy
+ame: Deploy
 
 on:
   push:
@@ -76,6 +76,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -88,16 +89,14 @@ jobs:
           aws s3 sync dist/ s3://my-bucket --delete
 ```
 
-### 🎯 在 Composite Action 或 Docker Action 使用 secrets
-
-Secrets 會作為環境變數傳入：
+### Using secrets in Composite or Docker Actions
 
 ```yaml
 env:
   API_KEY: ${{ secrets.API_KEY }}
 ```
 
-在程式中讀取：
+Python example:
 
 ```python
 import os
@@ -106,25 +105,36 @@ key = os.getenv("API_KEY")
 
 ---
 
-## ⚠️ 4. Secrets 使用注意事項
+## ⚠️ 4. Important Safety Practices
 
-* ❌ **不要把 secrets 寫進程式碼或 commit**
-* ❌ 不要傳給第三方（非 GitHub 官方）未信任的 actions
-* ✔️ 儘量使用最小權限（Principle of Least Privilege）
-* ✔️ 建議在 production 及 staging 使用不同 secrets
-* ✔️ 建議定期 rotate（更新）密鑰
+### ❌ Never commit secrets to the repository
 
-官方最佳實踐：
-👉 [https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
+Hard-coded secrets can be leaked, scraped, or abused.
+
+### ❌ Avoid passing secrets to untrusted third-party actions
+
+Unless the action is verified or audited.
+
+### ✔️ Use the **Principle of Least Privilege**
+
+Give each secret only the permissions needed.
+
+### ✔️ Use separate secrets for staging and production
+
+Avoid accidental cross-environment deploys.
+
+### ✔️ Rotate secrets regularly
+
+Expired or compromised secrets should be replaced immediately.
+
+Official security hardening guide → [https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
 
 ---
 
-## 📚 官方文件總覽
+## 📚 Official Documentation Summary
 
-| 主題                    | 連結                                                                                                                                                                                   |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 使用 Actions Secrets    | [https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions)             |
-| Encrypted secrets 概念  | [https://docs.github.com/en/actions/security-guides/encrypted-secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)                                         |
-| GitHub Actions 安全最佳實踐 | [https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions) |
-
-
+| Topic                      | Link                                                                                                                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Using secrets in Actions   | [https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions)             |
+| Encrypted Secrets overview | [https://docs.github.com/en/actions/security-guides/encrypted-secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)                                         |
+| Security best practices    | [https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions) |

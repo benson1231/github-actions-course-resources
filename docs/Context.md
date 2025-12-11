@@ -1,94 +1,93 @@
-# GitHub Actions Contexts & toJSON() 全指南
+# GitHub Actions Contexts
 
-GitHub Actions 提供許多 **contexts（上下文物件）**，例如 `github`、`env`、`job`、`runner`，你可以用它們讀取 workflow 執行時的資料。
+GitHub Actions provides multiple **contexts**—structured metadata objects you can access inside your workflows. These include `github`, `env`, `job`, `runner`, and others. They allow your workflow to react dynamically to events, branches, commit metadata, inputs, matrix values, and more.
 
-本文件說明：
+This document explains:
 
-* 什麼是 Context
-* 為什麼要用 `toJSON()`
-* 常見 Context 詳解
-* 如何在 workflow 中輸出全部 Context
-* 實戰技巧：debug workflow、創建 metadata file
-* 官方文件
+* What a *context* is
+* Why `toJSON()` is important
+* Common contexts and their uses
+* How to print entire contexts for debugging
+* Practical workflow examples
+* Links to official documentation
 
 ---
 
-## ✨ 什麼是 Context？
+## ✨ What Is a Context?
 
-Context 是 GitHub Actions 在 runtime 提供的 **只讀資料物件**。
-例如：
+A **context** is a **read‑only metadata object** automatically provided by GitHub Actions at runtime.
+
+Example:
 
 ```yaml
 echo "Repo: ${{ github.repository }}"
 ```
 
-會輸出：
+Output:
 
 ```
-benson1231/github-actions-course-resources
+owner/repo
 ```
 
-Context 不是環境變數，而是 GitHub 自動提供的 metadata。
+Contexts are **not environment variables**—they are structured objects containing event, repository, commit, and workflow information.
 
 ---
 
-## 🔍 為什麼使用 `toJSON()`？
+## 🔍 Why Use `toJSON()`?
 
-因為 Context 是一個複雜物件（dictionary / map），直接印會失敗。
-
-例如：
+Most contexts are complex objects (maps / dictionaries). You **cannot print them directly**:
 
 ```yaml
-echo "${{ github }}"   # ❌ 不可行
+echo "${{ github }}"   # ❌ This fails
 ```
 
-但使用：
+But with `toJSON()`:
 
 ```yaml
 echo '${{ toJSON(github) }}'
 ```
 
-會輸出整個 JSON：
+You get a fully expanded JSON dump:
 
 ```json
 {
-  "token": "***",
   "repository": "owner/repo",
   "event_name": "push",
+  "sha": "abc123...",
   ...
 }
 ```
 
-這是 **debug workflow 最強方式**！
+This is **the single most powerful debugging method** in GitHub Actions.
 
 ---
 
-## 🧪 在 workflow 中完整輸出 Context
+## 🧪 Outputting Contexts Inside a Workflow
 
-### 📌 取得 `github` context
+### Print the `github` context
 
 ```yaml
 - name: Output GitHub context
   run: echo '${{ toJSON(github) }}'
 ```
 
-### 📌 更多 contexts
+### Print multiple contexts
 
 ```yaml
 - run: echo '${{ toJSON(env) }}'
 - run: echo '${{ toJSON(job) }}'
 - run: echo '${{ toJSON(steps) }}'
 - run: echo '${{ toJSON(runner) }}'
-- run: echo '${{ toJSON(matrix) }}'   # 如果有用 matrix
+- run: echo '${{ toJSON(matrix) }}'   # If using matrix
 ```
 
-你也可以把內容寫到檔案：
+### Save context output to a file
 
 ```yaml
 - run: echo '${{ toJSON(github) }}' > github.json
 ```
 
-並上傳：
+Upload it as an artifact:
 
 ```yaml
 - uses: actions/upload-artifact@v4
@@ -99,19 +98,19 @@ echo '${{ toJSON(github) }}'
 
 ---
 
-## 📋 常見 Contexts 介紹
+## 📋 Common Contexts Explained
 
-| Context  | 用途                                         |
-| -------- | ------------------------------------------ |
-| `github` | repo, event, sha, actor, workflow metadata |
-| `env`    | 所有環境變數（包含自訂的）                              |
-| `runner` | Runner 機器資訊（OS、架構、暫存路徑）                    |
-| `job`    | Job 狀態、id、結果                               |
-| `steps`  | 讀取其他 steps 的 outputs                       |
-| `matrix` | Matrix job variables                       |
-| `inputs` | workflow_dispatch 的參數                      |
+| Context    | Description                                                  |
+| ---------- | ------------------------------------------------------------ |
+| **github** | Event metadata: repo, SHA, actor, workflow, event payload    |
+| **env**    | All environment variables (including those you set manually) |
+| **runner** | OS, architecture, temp directories, workspace paths          |
+| **job**    | Job-level metadata, status, IDs                              |
+| **steps**  | Access outputs from previous steps                           |
+| **matrix** | Values defined by matrix strategies                          |
+| **inputs** | Parameters passed via `workflow_dispatch`                    |
 
-例如：
+Example usage:
 
 ```yaml
 echo "Commit: ${{ github.sha }}"
@@ -119,9 +118,9 @@ echo "Commit: ${{ github.sha }}"
 
 ---
 
-## 🎯 實戰技巧
+## 🎯 Practical Techniques
 
-### 1️⃣ Debug workflow（最常用）
+### 1️⃣ Full Debug Dump — highly recommended
 
 ```yaml
 - name: Debug all contexts
@@ -131,7 +130,9 @@ echo "Commit: ${{ github.sha }}"
     echo "ENV: ${{ toJSON(env) }}"
 ```
 
-### 2️⃣ 自動產生 metadata.json 並部署
+### 2️⃣ Generate a metadata.json for deployment
+
+Useful for apps showing their build info.
 
 ```yaml
 - name: Generate metadata
@@ -139,19 +140,19 @@ echo "Commit: ${{ github.sha }}"
     echo '${{ toJSON(github) }}' > build/metadata.json
 ```
 
-### 3️⃣ 讓前端讀 workflow metadata
+### 3️⃣ Let frontend apps read runtime metadata
 
-你的 React 或 static website 可以顯示：
+You can show:
 
-* 目前部署的 commit
-* build time
-* workflow run number
+* Deployed commit SHA
+* Build timestamp
+* Workflow run number
+* Triggering user
 
 ---
 
-## 📚 官方文件
+## 📚 Official Documentation
 
-* Contexts：[https://docs.github.com/en/actions/learn-github-actions/contexts](https://docs.github.com/en/actions/learn-github-actions/contexts)
-* 表達式語法：[https://docs.github.com/en/actions/learn-github-actions/expressions](https://docs.github.com/en/actions/learn-github-actions/expressions)
-* Workflow 中使用 JSON：[https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-json](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-json)
-
+* **Contexts**: [https://docs.github.com/en/actions/learn-github-actions/contexts](https://docs.github.com/en/actions/learn-github-actions/contexts)
+* **Expression syntax**: [https://docs.github.com/en/actions/learn-github-actions/expressions](https://docs.github.com/en/actions/learn-github-actions/expressions)
+* **Using JSON in workflows**: [https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-json](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-json)

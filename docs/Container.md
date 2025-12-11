@@ -1,28 +1,33 @@
-# GitHub Actions：容器與服務容器完整教學
+# GitHub Actions: Containers and Service Containers
 
-本文件說明 **GitHub Actions 的兩種容器執行方式：容器(Container)** 與 **服務容器(Service Containers)**，包含用途、差異、使用時機、範例 workflow，以及官方文件連結。
+This document explains the two container execution models in GitHub Actions:
+
+* **Job-level Containers** (the entire job runs inside a Docker image)
+* **Service Containers** (additional supporting services such as databases)
+
+You'll learn what they are, when to use them, how they differ, and how to configure them with real workflow examples.
 
 ---
 
-## 🐳 1. 什麼是「容器（Container）」？
+# 🐳 1. What Is a Job-level Container?
 
-容器在 GitHub Actions 中代表：
+In GitHub Actions, a *container* means:
 
-> **整個 Job 會在某個 Docker container 內執行**，包括 steps、工具、環境設定。
+> **The entire job runs inside a specific Docker container**, including every step.
 
-主要特色：
+### Key characteristics
 
-* Job 的 runner 變成你指定的 Docker image
-* 適用於需要 **一致環境**、**特定版本工具** 的情境
-* 所有 steps 都在同一個容器內執行
+* The job's execution environment becomes the Docker image you specify.
+* Guarantees **fully reproducible environments**.
+* Useful when the runner must have **specific tools or versions**.
 
-### ✔ 使用時機
+### ✔ When to use job containers
 
-* 需要 Python / Node / Java 的特定版本
-* 需要 Bioinformatics 工具（FASTQC, samtools, OptiType…）
-* 須保證環境 100% 可重現（infra reproducible）
+* Requiring locked versions of Python / Node / Java, etc.
+* Running scientific or bioinformatics tools (FASTQC, samtools, OptiType…)
+* Ensuring deterministic, identical runtime environments across all runs.
 
-### ✔ 範例：使用容器執行整個 Job
+### ✔ Example: Run a job inside a Python container
 
 ```yaml
 jobs:
@@ -33,33 +38,31 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Install deps
+      - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Run tests
         run: pytest -v
 ```
 
-📌 在這個例子中：
-所有 steps 都是在 `python:3.12` image 裡執行。
+📌 All steps execute *inside* the `python:3.12` container.
 
 ---
 
-## 🧪 2. 什麼是「服務容器（Service Containers）」？
+# 🧪 2. What Is a Service Container?
 
-服務容器是：
+A **service container** is:
 
-> **Job 執行時附加的外部服務**（例如資料庫、快取、API 模擬器）。
+> **An external service that runs alongside your job**, like a database, cache, or API mock server.
 
-你的 steps 仍然在 runner 或 container 中執行，但可以連到可用的 service containers。
+Your workflow steps still run on the runner or container, but they can connect to the services.
 
-### ✔ 使用時機
+### ✔ When to use service containers
 
-* 測試資料庫：MongoDB / PostgreSQL / MySQL
-* 使用 Redis 做快取測試
-* 需要依賴外部 API（mock server）
-* 全端應用 E2E 測試
+* Testing against **MongoDB, PostgreSQL, MySQL, Redis**
+* Running integration tests requiring external services
+* API mock servers for backend/frontend projects
 
-### ✔ 範例：Node.js + MongoDB 服務容器
+### ✔ Example: Node.js app with MongoDB service
 
 ```yaml
 jobs:
@@ -76,7 +79,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Install deps
+      - name: Install dependencies
         run: npm ci
       - name: Run tests
         env:
@@ -84,34 +87,32 @@ jobs:
         run: npm test
 ```
 
-📌 在這例子中：
-
-* Job 在 runner（Ubuntu）中執行
-* MongoDB 以「服務容器」方式啟動，可供測試連線
+📌 Your job runs on Ubuntu, while MongoDB runs in a sidecar container.
 
 ---
 
-## 🔍 3. 容器與服務容器的差異比較
+# 🔍 3. Containers vs Service Containers
 
-| 功能              | 容器(Container)           | 服務容器(Service Containers) |
-| --------------- | ----------------------- | ------------------------ |
-| 作用位置            | 整個 Job 的執行環境            | Job 附加的外部服務              |
-| 影響範圍            | 所有 steps                | 只提供額外服務（DB, cache…）      |
-| 適用情境            | Bioinfo pipeline、語言版本固定 | DB/Redis 等整合測試           |
-| 誰在 container 裡？ | **你的 workflow steps**   | **外部服務**（你不會在裡面跑 steps）  |
+| Feature                    | Job Container                   | Service Container                           |
+| -------------------------- | ------------------------------- | ------------------------------------------- |
+| Purpose                    | Executes all workflow steps     | Provides external services (DB, cache, API) |
+| Scope                      | Entire job                      | Only supporting services                    |
+| Best for                   | Bioinformatics, pinned runtimes | Databases, Redis, mock APIs                 |
+| Workflow steps run inside? | **Yes**                         | **No** (services only)                      |
 
-📌 **你可以同時使用**：Job 在 container 裡執行 + 有服務容器提供 DB。
+📌 You can use **both at the same time**.
 
 ---
 
-## 🧩 4. 兩者合併使用的例子
+# 🧩 4. Using Both Together
 
-例如你想在 Python 容器中執行程式，但需要 PostgreSQL 服務：
+Example: Run Python code inside a container while using PostgreSQL as a service.
 
 ```yaml
 jobs:
   integration-test:
     runs-on: ubuntu-latest
+
     container:
       image: python:3.11
 
@@ -129,17 +130,14 @@ jobs:
       - run: pytest --db=postgresql://postgres:example@localhost:5432
 ```
 
-📌 這裡：
+📌 Here:
 
-* 你的 **程式在 python:3.11 容器**裡跑
-* PostgreSQL 是 **外部 service container**
+* Your application runs in the `python:3.11` container.
+* PostgreSQL runs as a service container.
 
 ---
 
-## 📚 官方文件
+# 📚 Official Documentation
 
-* Service Containers 官方說明：
-  [https://docs.github.com/en/actions/using-containerized-services/about-service-containers](https://docs.github.com/en/actions/using-containerized-services/about-service-containers)
-
-* 了解 workflow syntax：
-  [https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
+* Service Containers → [https://docs.github.com/en/actions/using-containerized-services/about-service-containers](https://docs.github.com/en/actions/using-containerized-services/about-service-containers)
+* Workflow Syntax → [https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)

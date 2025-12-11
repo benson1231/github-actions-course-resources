@@ -1,21 +1,21 @@
-# GitHub Actions workflow control 全指南
+# GitHub Actions Workflow Control
 
-GitHub Actions 雖然不是一個完整程式語言，但提供了多種 **流程控制（Control Flow）機制**，讓你可以：
+GitHub Actions is not a full programming language, but it provides powerful **workflow control mechanisms** that allow you to:
 
-* 控制哪些 steps / jobs 執行
-* 建立 Job 之間的依賴（needs）
-* 使用 if 條件判斷
-* 使用 continue-on-error 忽略錯誤
-* 在 Matrix 中控制特定組合
-* 依據事件類型、分支、輸入參數決定流程
+* Control which steps or jobs execute
+* Define dependencies between jobs (`needs`)
+* Use conditional execution (`if`)
+* Continue execution even when errors occur (`continue-on-error`)
+* Control matrix behavior (fail-fast, filtering, dynamic logic)
+* Adjust workflow behavior based on events, branches, file changes, or runtime outputs
 
-本章整理所有你會用到的 Control Flow 技巧。
+This guide covers every essential control-flow feature you will use when designing advanced CI/CD pipelines.
 
 ---
 
-# 📌 1. needs：建立 Job 依賴
+# 📌 1. `needs`: Define Job Dependencies
 
-`needs` 決定一個 job 必須在另一個 job 成功後才會執行。
+`needs` ensures that a job only runs after another job completes successfully.
 
 ```yaml
 jobs:
@@ -27,60 +27,60 @@ jobs:
     needs: build
 ```
 
-### 多個 needs：
+### Multiple dependencies
 
 ```yaml
 needs: [build, lint]
 ```
 
-### 使用 needs 取得其他 job 的 outputs：
+### Accessing outputs from dependent jobs
 
 ```yaml
-echo "Result: ${{ needs.build.outputs.version }}"
+echo "Version: ${{ needs.build.outputs.version }}"
 ```
 
 ---
 
-# 📌 2. if：條件判斷控制流程
+# 📌 2. `if`: Conditional Execution
 
-`if:` 是 workflow 裡最重要的控制語句。
+`if:` determines whether a job or step should run.
 
-### Step 層級：
+### Step-level condition
 
 ```yaml
 - name: Run only on main
   if: github.ref == 'refs/heads/main'
-  run: echo "main branch"
+  run: echo "Running on main branch"
 ```
 
-### Job 層級：
+### Job-level condition
 
 ```yaml
 if: github.event_name == 'pull_request'
 ```
 
-### 常用條件：
+### Common conditions
 
-| 條件        | 例子                                         |
-| --------- | ------------------------------------------ |
-| 分支        | `github.ref == 'refs/heads/main'`          |
-| 事件        | `github.event_name == 'push'`              |
-| PR        | `github.event.pull_request.merged == true` |
-| tag       | `startsWith(github.ref, 'refs/tags/')`     |
-| matrix 條件 | `matrix.node == 20`                        |
-| job 成功/失敗 | `if: failure()`                            |
+| Purpose    | Example                                    |
+| ---------- | ------------------------------------------ |
+| Branch     | `github.ref == 'refs/heads/main'`          |
+| Event      | `github.event_name == 'push'`              |
+| PR merged  | `github.event.pull_request.merged == true` |
+| Tag        | `startsWith(github.ref, 'refs/tags/')`     |
+| Matrix     | `matrix.node == 20`                        |
+| Job result | `if: failure()`                            |
 
 ---
 
-# 📌 3. continue-on-error：忽略錯誤但不終止流程
+# 📌 3. `continue-on-error`: Allow Failures Without Stopping Workflow
 
 ```yaml
-- name: Test unstable feature
-  run: npm run experimental-test
+- name: Test experimental feature
+  run: npm run test-experimental
   continue-on-error: true
 ```
 
-### 配合 job strategy：允許部分步驟失敗
+### With strategy: prevent early termination
 
 ```yaml
 strategy:
@@ -89,9 +89,11 @@ strategy:
 
 ---
 
-# 📌 4. fail-fast：Matrix 的流程控制
+# 📌 4. Matrix Control: `fail-fast`
 
-Matrix 預設 **某一組失敗就會取消其他組**。
+By default, matrix jobs stop when one job fails.
+
+Disable fail-fast:
 
 ```yaml
 strategy:
@@ -102,9 +104,9 @@ strategy:
 
 ---
 
-# 📌 5. 工作流程早停：cancel-in-progress
+# 📌 5. Workflow Cancellation: `concurrency`
 
-例如避免 Push 時重複跑：
+Avoid running multiple redundant workflows (e.g., on rapid commits).
 
 ```yaml
 concurrency:
@@ -114,7 +116,7 @@ concurrency:
 
 ---
 
-# 📌 6. 只有某些條件才上傳 Artifact
+# 📌 6. Conditional Artifact Upload
 
 ```yaml
 - uses: actions/upload-artifact@v4
@@ -126,43 +128,43 @@ concurrency:
 
 ---
 
-# 📌 7. 使用 outputs 建立邏輯流程
+# 📌 7. Use Outputs to Control Flow
 
-### Step 輸出：
+### Step outputs
 
 ```yaml
 - id: check
   run: echo "ok=true" >> $GITHUB_OUTPUT
 
-- name: Next step
+- name: Continue only if ok
   if: steps.check.outputs.ok == 'true'
-  run: echo "Continue"
+  run: echo "Proceeding..."
 ```
 
-### Job 輸出 → 下一個 Job 使用
+### Job outputs → next job
 
 ```yaml
 jobs:
-  first:
+  build:
     outputs:
       tag: ${{ steps.get_tag.outputs.tag }}
 
-  second:
-    needs: first
-    run: echo "Tag is ${{ needs.first.outputs.tag }}"
+  deploy:
+    needs: build
+    run: echo "Tag = ${{ needs.build.outputs.tag }}"
 ```
 
 ---
 
-# 📌 8. 依事件控制流程（event-based control flow）
+# 📌 8. Event-Based Workflow Control
 
-### 只在 PR 開啟時：
+### Execute only when PR is opened
 
 ```yaml
 if: github.event.action == 'opened'
 ```
 
-### 只在 push 但排除 bot：
+### Skip bot commits
 
 ```yaml
 if: github.actor != 'dependabot[bot]'
@@ -170,7 +172,7 @@ if: github.actor != 'dependabot[bot]'
 
 ---
 
-# 📌 9. 只針對特定檔案變動執行
+# 📌 9. Run Only When Specific Files Change
 
 ```yaml
 on:
@@ -182,14 +184,14 @@ on:
 
 ---
 
-# 📌 10. 完整 Control Flow 示範（含 needs + if + continue-on-error）
+# 📌 10. Complete Example: `needs` + `if` + `continue-on-error`
 
 ```yaml
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "build"
+      - run: echo "Building..."
 
   test:
     runs-on: ubuntu-latest
@@ -208,9 +210,8 @@ jobs:
 
 ---
 
-# 📚 官方文件
+# 📚 Official Documentation
 
 * Conditions: [https://docs.github.com/en/actions/using-jobs/using-conditions-to-control-job-execution](https://docs.github.com/en/actions/using-jobs/using-conditions-to-control-job-execution)
 * Expressions: [https://docs.github.com/en/actions/learn-github-actions/expressions](https://docs.github.com/en/actions/learn-github-actions/expressions)
-* Using outputs: [https://docs.github.com/en/actions/using-jobs/defining-outputs-for-jobs](https://docs.github.com/en/actions/using-jobs/defining-outputs-for-jobs)
-
+* Outputs: [https://docs.github.com/en/actions/u](https://docs.github.com/en/actions/u)

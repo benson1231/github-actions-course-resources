@@ -1,32 +1,39 @@
-# GitHub Actions Events 全面指南
+# GitHub Actions Events
 
-GitHub Actions 的工作流程（Workflow）是由不同的 **事件（events）** 觸發的。了解各種事件的行為，能幫助你設計更有效率、更安全、也更符合 CI/CD 需求的自動化流程。
+GitHub Actions workflows are triggered by **events**, which represent actions or changes happening inside your repository. Understanding these events is essential for building efficient, secure, and practical CI/CD pipelines.
 
-本文件整理了常見事件、使用情境、以及官方文件連結，並提供範例讓你可以快速上手。
+This guide explains:
 
----
-
-## 🚀 什麼是 GitHub Actions Events？
-
-Event 是用來**觸發 workflow 的條件**。例如：
-
-* push 到某個 branch
-* 有人開 PR
-* 新版本釋出（release）
-* CRON 排程時間到
-* issue 被開啟、關閉
-
-你的 workflow 就會根據這些事件自動執行。
-
-官方 Docs： [https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)
+* What an event is
+* The most commonly used events
+* When to use each event
+* Syntax examples
+* A summary table
+* Official documentation links
 
 ---
 
-# 🔥 常見 GitHub Actions Events
+## 🚀 What Are GitHub Actions Events?
+
+An **event** is anything that can **trigger a workflow**. For example:
+
+* Code pushed to a branch
+* A pull request is created or updated
+* A new release is published
+* A scheduled CRON job runs
+* An issue or PR receives a new comment
+
+Whenever an event occurs, GitHub runs the workflows associated with it.
+
+📘 Official Docs: [https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)
+
+---
+
+# 🔥 Common GitHub Actions Events
 
 ## 1. `push`
 
-當程式碼推送到任何分支（或指定分支）時觸發。
+Triggered whenever code is pushed to a branch (or specific branches).
 
 ```yaml
 ame: On Push
@@ -37,17 +44,17 @@ on:
       - dev
 ```
 
-### 常見用途
+### Typical Use Cases
 
-* 自動測試
-* 自動部署
-* Lint 檢查
+* Continuous Integration (tests)
+* Linting
+* Auto-deployment
 
 ---
 
 ## 2. `pull_request`
 
-在 PR 建立、同步、重新開啟時觸發。
+Triggered when a PR is opened, updated, synchronized, or reopened.
 
 ```yaml
 ame: On PR
@@ -57,16 +64,17 @@ on:
       - main
 ```
 
-### 常見用途
+### Typical Use Cases
 
-* 跑 PR 測試、Lint
-* 在 PR 上留言檢查結果
+* PR testing
+* Linting and validation
+* Automated review bots
 
 ---
 
-## 3. `workflow_dispatch`（手動觸發）
+## 3. `workflow_dispatch` (Manual Trigger)
 
-允許你從 GitHub UI 手動按下 **Run workflow**。
+Allows you to run workflows manually from the GitHub UI.
 
 ```yaml
 ame: Manual Run
@@ -74,40 +82,40 @@ on:
   workflow_dispatch:
     inputs:
       env:
-        description: "選擇環境"
+        description: "Select environment"
         required: true
         default: "prod"
 ```
 
-### 常見用途
+### Typical Use Cases
 
-* 手動部署
-* 手動觸發 ETL / Batch 任務
+* Manual deployment
+* Running batch/ETL tasks
 
 ---
 
-## 4. `schedule`（排程）
+## 4. `schedule` (CRON Jobs)
 
-透過 cron 自動定時執行。
+Runs workflows on a CRON schedule.
 
 ```yaml
 ame: Daily Job
 on:
   schedule:
-    - cron: "0 18 * * *"  # 每天臺灣時間 02:00
+    - cron: "0 18 * * *"  # Runs daily at 02:00 Taiwan time
 ```
 
-### 常見用途
+### Typical Use Cases
 
-* 每日報表
-* 定期備份
-* 健康檢查
+* Daily reporting
+* Periodic backups
+* Health checks
 
 ---
 
 ## 5. `release`
 
-當發布版本（release）時觸發。
+Triggered when a new release is published.
 
 ```yaml
 ame: On Release
@@ -116,16 +124,16 @@ on:
     types: [created]
 ```
 
-### 常見用途
+### Typical Use Cases
 
-* Build / Upload binaries
-* 自動建立 changelog
+* Building and uploading binaries
+* Generating release notes or changelogs
 
 ---
 
 ## 6. `workflow_run`
 
-當 **其他 workflow 執行完後** 觸發（適合分段 CI/CD）。
+Triggered when **another workflow** finishes.
 
 ```yaml
 ame: Deploy After Test
@@ -136,13 +144,14 @@ on:
       - completed
 ```
 
-### 常見用途
+### Typical Use Cases
 
-* 在測試通過後才部署
+* Multi-stage CI/CD pipelines
+  (e.g., test → build → deploy)
 
 ---
 
-## 7. Issue / PR 事件（如：`issues`、`issue_comment`、`pull_request_review`）
+## 7. Issue / PR Events (`issues`, `issue_comment`, `pull_request_review`, etc.)
 
 ```yaml
 ame: On Issue Comment
@@ -151,28 +160,29 @@ on:
     types: [created]
 ```
 
-### 常見用途
+### Typical Use Cases
 
-* Bot 自動回覆
-* 自動標籤（label）管理
-
----
-
-# 📌 常用 Event 對照表
-
-| Event               | 什麼時候觸發            | 常見用途                 |
-| ------------------- | ----------------- | -------------------- |
-| `push`              | 推送程式碼             | CI、Lint、自動部署         |
-| `pull_request`      | PR 建立/更新          | 檢查 PR、跑測試            |
-| `workflow_dispatch` | 手動按下 Run workflow | 手動部署、工具任務            |
-| `schedule`          | Cron 時間到          | 排程任務、ETL             |
-| `release`           | 新版本釋出             | Build artifacts、發布套件 |
-| `workflow_run`      | 另一 workflow 完成    | 多階段 pipeline         |
-| `issue_comment`     | Issue/PR 留言       | Bot 回覆、自動管理          |
+* GitHub bot automations
+* Comment-based commands (`/retest`, `/deploy`)
+* Automatic labeling
 
 ---
 
-# 🧪 範例：同時支援 push + PR + 手動觸發
+# 📌 Event Summary Table
+
+| Event               | Trigger Timing                      | Typical Use Cases                        |
+| ------------------- | ----------------------------------- | ---------------------------------------- |
+| `push`              | Code pushed to a branch             | CI, linting, auto-deployment             |
+| `pull_request`      | PR opened/updated                   | PR validation, tests                     |
+| `workflow_dispatch` | Manual "Run workflow"               | Manual deploy, maintenance tasks         |
+| `schedule`          | CRON schedule                       | Nightly builds, backups, reports         |
+| `release`           | Release created                     | Publishing artifacts, release automation |
+| `workflow_run`      | Another workflow completes          | Chained workflows / staging pipelines    |
+| `issue_comment`     | A comment appears on an issue or PR | Bots, labeling, automation tools         |
+
+---
+
+# 🧪 Example: Support `push` + `pull_request` + Manual Trigger
 
 ```yaml
 ame: CI Pipeline
@@ -192,12 +202,22 @@ jobs:
 
 ---
 
-# 🎯 小結
+# 🎯 Summary
 
-Event 是 GitHub Actions 自動化的核心，你可以：
+Events are the heart of GitHub Actions automation. Use:
 
-* 用 `push` 執行 CI
-* 用 `pull_request` 檢查 PR
-* 用 `workflow_dispatch` 手動觸發部署
-* 用 `schedule` 做定時任務
+* `push` for CI and deployment
+* `pull_request` for PR validation
+* `workflow_dispatch` for manual control
+* `schedule` for timed jobs
+* `release` for publishing automation
+* `workflow_run` for multi-stage pipelines
 
+Mastering events enables you to build powerful, flexible, and production-ready workflows.
+
+---
+
+📘 Official Documentation
+
+* Events Overview: [https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)
+* Workflow Syntax: [https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)

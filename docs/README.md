@@ -1,65 +1,67 @@
-> Download slide made from [academind/github-actions-course-resources](https://github.com/academind/github-actions-course-resources/blob/main/Slides/github-actions.pdf)
+# GitHub Actions Overview
 
-# GitHub Actions 基本架構（Workflow Skeleton）
+> Download slide from [academind](https://academind.com/) github resource [academind/github-actions-course-resources](https://github.com/academind/github-actions-course-resources/blob/main/Slides/github-actions.pdf)
 
-這份文件提供 **最常用、最標準的 GitHub Actions 基本架構**，適合作為任何 workflow 的起始模板。
+This document provides a clean, production-ready **base template for GitHub Actions workflows**, suitable for CI, testing, building, linting, or deployment pipelines.
 
 ---
 
-# 📌 Workflow 基本結構示意
+# 📌 Workflow Structure
 
 ```yaml
 name: My Workflow
 
-# 🟦 觸發條件（Events）
+# 🟦 Workflow Triggers (Events)
 on:
   push:
     branches: [ main ]
   pull_request:
-  workflow_dispatch:   # 手動觸發
+  workflow_dispatch:   # Manual trigger
 
-# 🟩 工作集合（Jobs）
+# 🟩 Jobs
 jobs:
   example-job:
-    runs-on: ubuntu-latest   # 使用哪個 Runner
+    runs-on: ubuntu-latest   # Select runner environment
 
-    # 🟧 steps：一個 job 由多個步驟組成
+    # 🟧 Steps executed within this job
     steps:
-      # 1. 把 repo checkout 下來（任何 workflow 幾乎必備）
+      # 1. Checkout repository (almost always required)
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. 安裝環境（使用第三方 action）
+      # 2. Setup environment (using marketplace actions)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      # 3. 執行 Shell 指令
+      # 3. Run shell commands
       - name: Install dependencies
         run: npm ci
 
       - name: Run tests
         run: npm test
 
-      # 4. 使用 outputs / artifacts / cache (按需加入)
+      # 4. Additional tasks: cache, artifacts, outputs, etc.
 ```
 
 ---
 
-# 🧩 Workflow 元件拆解
+# 🧩 Breakdown of Workflow Components
 
-## 1️⃣ name — Workflow 名稱
+## 1️⃣ `name` — Workflow Name
+
+Displayed in the GitHub Actions UI.
 
 ```yaml
 name: CI Pipeline
 ```
 
-可任意命名，用於 GitHub Actions UI 顯示。
-
 ---
 
-## 2️⃣ on — 觸發事件
+## 2️⃣ `on` — Triggering Events
+
+Defines when the workflow runs.
 
 ```yaml
 on:
@@ -67,27 +69,29 @@ on:
     branches: [ main ]
   pull_request:
   schedule:
-    - cron: '0 2 * * *'   # 每天 2 AM
+    - cron: "0 2 * * *"   # Run daily at 2 AM UTC
   workflow_dispatch:
 ```
 
-常用 Events：
+Most common events:
 
 * `push`
 * `pull_request`
-* `workflow_dispatch`（手動觸發）
-* `schedule`（排程）
+* `workflow_dispatch` (manual trigger)
+* `schedule` (cron jobs)
 * `release`
 * `workflow_run`
 
 ---
 
-## 3️⃣ jobs — Workflow 的核心
+## 3️⃣ `jobs` — The Core of a Workflow
 
-一個 workflow 可以有多個 jobs，每個 job 可以：
+A workflow may contain **one or many jobs**.
 
-* 平行執行
-* 使用 `needs:` 指定依賴
+* Jobs can run **in parallel**.
+* Or define dependencies using `needs:`.
+
+Example:
 
 ```yaml
 jobs:
@@ -101,32 +105,34 @@ jobs:
 
 ---
 
-## 4️⃣ runs-on — 指定 Runner
+## 4️⃣ `runs-on` — Selecting a Runner
+
+Specifies the environment for the job.
 
 ```yaml
 runs-on: ubuntu-latest
 ```
 
-可用選項：
+Available:
 
 * `ubuntu-latest`
 * `windows-latest`
 * `macos-latest`
-* 自架 Runner
+* Self-hosted runners
 
 ---
 
-## 5️⃣ steps — Job 的執行步驟
+## 5️⃣ `steps` — Instructions Executed by a Job
 
-典型步驟：
+Key step types:
 
-### ✔ Checkout 程式碼（幾乎所有 workflow 都會用）
+### ✔ Checkout repository
 
 ```yaml
 - uses: actions/checkout@v3
 ```
 
-### ✔ 使用第三方 Action
+### ✔ Use marketplace actions
 
 ```yaml
 - uses: actions/setup-node@v3
@@ -134,13 +140,13 @@ runs-on: ubuntu-latest
     node-version: 20
 ```
 
-### ✔ 執行 Shell 指令
+### ✔ Run shell commands
 
 ```yaml
 - run: echo "Hello GitHub Actions!"
 ```
 
-### ✔ 設定環境變數
+### ✔ Set environment variables
 
 ```yaml
 - run: echo "VERSION=1.0.0" >> $GITHUB_ENV
@@ -148,7 +154,7 @@ runs-on: ubuntu-latest
 
 ---
 
-# 🎯 最標準的 Workflow 基本模板
+# 🎯 Recommended Base CI Template
 
 ```yaml
 name: Basic CI
@@ -184,9 +190,16 @@ jobs:
 
 ---
 
-# 📚 官方文件
+# 📚 Official Documentation
 
-* Workflow syntax：[https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
-* Events：[https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)
-* Actions marketplace：[https://github.com/marketplace?type=actions](https://github.com/marketplace?type=actions)
+* Workflow syntax: [https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
+* Events: [https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)
+* GitHub Actions Marketplace: [https://github.com/marketplace?type=actions](https://github.com/marketplace?type=actions)
 
+---
+
+If you'd like, I can also add:
+
+* A minimal workflow version
+* A production deployment template
+* A template with caching / matrix / concurrency baked in

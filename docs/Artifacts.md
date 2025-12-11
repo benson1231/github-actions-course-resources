@@ -1,56 +1,56 @@
-# GitHub Actions Artifacts 全指南
+# GitHub Actions Artifacts
 
-Artifacts（製品）是 GitHub Actions 用來 **在 jobs 之間傳遞檔案、保存測試結果、輸出 build 產物** 的主要工具。
+Artifacts are one of the core mechanisms in GitHub Actions used to **pass files between jobs, store test results, preserve build outputs, and support debugging workflows**.
 
-本文件將清楚介紹：
+This guide explains:
 
-* 什麼是 Artifact
-* 為什麼需要 Artifact
-* Upload / Download Artifacts 的完整語法
-* 多 job pipeline 範例（含圖）
-* 常見錯誤與排查方法
-* 官方文件連結
-
----
-
-## 📌 什麼是 Artifact？
-
-Artifact 是 GitHub Actions workflow 執行後保存的檔案。
-
-用途包括：
-
-* 在 jobs 之間傳遞資料（例如：build → deploy）
-* 保存測試報告（JUnit, coverage, logs）
-* 保存建置產物（dist/、binary、zip...）
-* Debug 用途（例如：上傳錯誤 log）
-
-> 官方文件：[https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts)
+* What Artifacts are
+* Why they are needed
+* How to upload and download artifacts
+* Multi-job pipeline examples (with diagrams)
+* Common errors and troubleshooting
+* Official documentation links
 
 ---
 
-## 📦 上傳 Artifact — `actions/upload-artifact`
+## 📌 What Is an Artifact?
+
+An **artifact** is any file or directory saved after a workflow job finishes.
+
+Common use cases include:
+
+* Passing build outputs between jobs (e.g., `build → deploy`)
+* Storing test reports (JUnit, coverage, logs)
+* Saving distribution files (e.g., `dist/`, binaries, ZIP archives)
+* Uploading logs for debugging
+
+📖 Official docs: [https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts)
+
+---
+
+## 📦 Uploading Artifacts — `actions/upload-artifact`
 
 ```yaml
-t- name: Upload artifacts
+- name: Upload artifacts
   uses: actions/upload-artifact@v4
   with:
     name: dist-files
     path: dist
 ```
 
-### 重要參數
+### Key Parameters
 
-| 參數                  | 說明                    |
-| ------------------- | --------------------- |
-| `name`              | Artifact 名稱（下載時要用）    |
-| `path`              | 要上傳的檔案或資料夾            |
-| `if-no-files-found` | ignore / warn / error |
+| Parameter           | Description                              |
+| ------------------- | ---------------------------------------- |
+| `name`              | The artifact name (required to download) |
+| `path`              | Files or directories to upload           |
+| `if-no-files-found` | `ignore` / `warn` / `error`              |
 
 ---
 
-## 📥 下載 Artifact — `actions/download-artifact`
+## 📥 Downloading Artifacts — `actions/download-artifact`
 
-以下會將 artifact 解壓縮到指定資料夾：
+This extracts the artifact into the specified folder:
 
 ```yaml
 - name: Get build artifacts
@@ -60,19 +60,19 @@ t- name: Upload artifacts
     path: ./dist
 ```
 
-### 常見錯誤
+### Common Errors
 
 ❌ **Artifact not found**
 
-原因通常為：
+Usually caused by:
 
-* 名稱寫錯（必須完全相同）
-* build job 沒成功 → 沒產生 artifact
-* download job 未標記依賴 (`needs: build`)
+* Wrong artifact name (must match exactly)
+* Build job failed → no artifact was uploaded
+* Missing job dependency (`needs: build`)
 
 ---
 
-## 🔗 多 Job Pipeline 範例（Build → Deploy）
+## 🔗 Multi-Job Pipeline Example (Build → Deploy)
 
 ```yaml
 jobs:
@@ -101,7 +101,7 @@ jobs:
       - run: echo "Deploying..."
 ```
 
-### Pipeline 流程圖（Mermaid）
+### Pipeline Diagram (Mermaid)
 
 ```mermaid
 graph TD
@@ -111,7 +111,7 @@ graph TD
 
 ---
 
-## 🧪 測試報告範例（只有失敗時上傳）
+## 🧪 Example: Upload Test Report Only on Failure
 
 ```yaml
 - name: Run tests
@@ -128,45 +128,44 @@ graph TD
 
 ---
 
-## ⚠️ Artifact 常見陷阱
+## ⚠️ Common Pitfalls
 
-### 1. `npm ci` 找不到 package-lock.json
+### 1. `npm ci` cannot find `package-lock.json`
 
-代表你的 working-directory 設錯，Artifacts 沒關係，但 build 會失敗。
+This usually indicates an incorrect `working-directory` rather than an artifact issue.
 
-### 2. Upload 路徑錯誤
+### 2. Incorrect upload path
 
-例如：
+If the directory does not exist:
 
 ```
 path: dist
 ```
 
-如果 dist 不存在 → 不會上傳。
+→ No artifact will be created.
 
-### 3. Download 時資料夾層級錯誤
+### 3. Folder nesting issues on download
 
-download-artifact 會自動建立 `path` 資料夾：
+`download-artifact` automatically creates the specified folder:
 
 ```
 ./dist/index.html
 ```
 
-如果你希望自訂子資料夾，需要額外調整。
+If you want a custom layout, you must move files manually.
 
-### 4. Artifacts 不適合存大型檔案（>2GB）
+### 4. Artifacts are not suitable for very large files (>2 GB)
 
-建議改用：
+Use alternatives:
 
-* S3
-* GH Releases
-* Container registry
+* AWS S3
+* GitHub Releases
+* Container registries
 
 ---
 
-## 📚 官方文件
+## 📚 Official Documentation
 
-* Artifacts 概念：[https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts)
-* upload-artifact：[https://github.com/actions/upload-artifact](https://github.com/actions/upload-artifact)
-* download-artifact：[https://github.com/actions/download-artifact](https://github.com/actions/download-artifact)
-
+* Artifacts Overview: [https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts)
+* Upload Artifact Action: [https://github.com/actions/upload-artifact](https://github.com/actions/upload-artifact)
+* Download Artifact Action: <[https://github.com/actions/download-a](https://github.com/actions/download-a)

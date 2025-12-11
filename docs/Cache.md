@@ -1,62 +1,66 @@
-# GitHub Actions Cache 全指南
+# GitHub Actions Cache
 
-Cache（快取）是 GitHub Actions 中用來 **加速 workflow 執行** 的核心功能，常用於：
+Caching is one of the most effective ways to **speed up GitHub Actions workflows** by reusing previously downloaded or generated files. It is commonly used for:
 
-* npm / pip / conda 套件快取
-* Docker layers 快取
-* Build 產物快取（如 node_modules、.next、.venv）
-* 大型專案的依賴快取（Rust、Go、Java、R…）
+* npm / pip / conda dependency caching
+* Docker layer caching
+* Framework build caches (node_modules, .next, .venv, target/)
+* Large dependency caches for Rust, Go, Java, R, etc.
 
-本指南會清楚解釋：
+This guide explains:
 
-* Cache 是什麼
-* Cache vs Artifact 差異
-* 如何設定 Cache（完整範例）
-* Key / restore-keys 機制
-* 常見錯誤與排查
-* 官方文件連結
+* What cache is and why it matters
+* Cache vs Artifact
+* How to configure caching correctly
+* How cache keys and restore-keys work
+* Common pitfalls and debugging tips
+* Official documentation links
 
 ---
 
-## 📌 什麼是 Cache？
+## 📌 What Is Cache?
 
-Cache 是 GitHub Actions 用來儲存 **能重複利用的檔案** 的機制，例如：
+A **cache** stores reusable files so that future workflow runs don’t need to regenerate or redownload them.
 
-* node_modules
-* pip 的虛擬環境
-* Docker 層
+Common cached items include:
 
-目的是：
+* `node_modules`
+* Python virtual environment packages
+* Docker build layers
 
-> 減少 workflow 執行時間，避免每次重新下載依賴。
+**Goal:**
 
-官方文件：
+> Reduce workflow execution time by avoiding redundant installations.
+
+Official documentation:
 [https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows](https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows)
 
 ---
 
-## 📦 使用快取 — actions/cache@v3
+## 📦 Using Cache — `actions/cache@v3`
 
-### 最基本模式
+### Basic Example
 
 ```yaml
-- name: Cache npm deps
+- name: Cache npm dependencies
   uses: actions/cache@v3
   with:
     path: node_modules
     key: deps-${{ hashFiles('package-lock.json') }}
 ```
 
-### 為什麼要用 hashFiles？
+### Why `hashFiles`?
 
-hashFiles() 會根據檔案內容產生唯一值：
+`hashFiles()` creates a hash based on file contents.
 
-* package-lock.json 改 → key 變 → cache 不會命中（因為依賴改了）
-* package-lock.json 沒改 → key 一樣 → 使用舊 cache
+* If `package-lock.json` changes → the key changes → old cache is ignored (correct behavior)
+* If it has not changed → the cache is reused
+
+This prevents stale dependencies.
 
 ---
 
-## 🔄 restore-keys — 部分匹配快取
+## 🔄 Using `restore-keys` for Partial Cache Matching
 
 ```yaml
 key: npm-${{ hashFiles('package-lock.json') }}
@@ -64,38 +68,36 @@ restore-keys: |
   npm-
 ```
 
-restore-keys 允許 GitHub 嘗試找到：
+`restore-keys` allows GitHub to fall back to **any cache that begins with `npm-`**.
 
-* 以 `npm-` 開頭的任意 cache
-
-當你希望「找不到完全匹配的 key，也能使用舊版 cache」時很好用。
+Useful when you prefer using older caches rather than having none at all.
 
 ---
 
-## 🧪 npm 快取完整範例
+## 🧪 Complete npm Caching Example
 
 ```yaml
 steps:
   - uses: actions/checkout@v3
 
-  - name: Cache node modules
+  - name: Cache npm global cache
     id: cache
     uses: actions/cache@v3
     with:
       path: ~/.npm
-      key: npm-cache-${{ hashFiles('package-lock.json') }}
+      key: npm-${{ hashFiles('package-lock.json') }}
       restore-keys: |
-        npm-cache-
+        npm-
 
-  - name: Install deps
+  - name: Install dependencies
     run: npm ci
 ```
 
-> ⚠️ 注意：npm 官方建議快取 **~/.npm** 而不是 node_modules。
+> ⚠️ Best practice: Cache `~/.npm` rather than `node_modules` for better reliability.
 
 ---
 
-## 🐍 pip / Python cache
+## 🐍 Python / pip Cache Example
 
 ```yaml
 - uses: actions/cache@v3
@@ -106,7 +108,7 @@ steps:
 
 ---
 
-## 🐳 Docker layer cache（最常見 CI/CD 使用案例）
+## 🐳 Docker Layer Cache Example
 
 ```yaml
 - name: Cache Docker layers
@@ -120,53 +122,53 @@ steps:
 
 ---
 
-## 🧬 Cache vs Artifact 差異
+## 🧬 Cache vs Artifact — Key Differences
 
-| 功能   | Artifact            | Cache                          |
-| ---- | ------------------- | ------------------------------ |
-| 用途   | 保存 workflow 結果、測試報告 | 加速 workflow（依賴快取）              |
-| 適合   | dist/，報告，產物         | node_modules、pip、Docker layers |
-| 生命周期 | 90 天                | 7 天（預設）                        |
-| 是否覆寫 | 不會覆寫，版本多個           | key 衝突會取代舊 cache               |
-| 大小   | 通常較大                | 限制在 10GB 內                     |
+| Feature            | Artifact                               | Cache                       |
+| ------------------ | -------------------------------------- | --------------------------- |
+| Purpose            | Store workflow results                 | Speed up workflows          |
+| Best for           | build outputs, reports, packaged files | dependencies, Docker layers |
+| Retention          | 90 days                                | 7 days (default)            |
+| Overwrite behavior | Does not overwrite existing versions   | New key replaces old cache  |
+| Size limit         | Larger                                 | 10 GB per cache             |
 
-它們不能互相取代。
+They are **not interchangeable**.
 
 ---
 
-## ⚠️ Cache 常見錯誤
+## ⚠️ Common Cache Pitfalls
 
-### ❌ 1. "Cache not found" 但你確定有跑過
+### ❌ 1. "Cache not found" even though it existed
 
-原因多半是：
+Likely reasons:
 
-* key 不一致（hashFiles 改變）
-* restore-keys 沒設
-* runner OS 不同（Linux / Windows / macOS） → cache 不共用
+* Key mismatch
+* Missing restore-keys
+* Different OS runner (Linux/Windows/macOS do not share cache)
 
-### ❌ 2. npm ci 失敗：找不到 package-lock.json
+### ❌ 2. `npm ci` fails because `package-lock.json` cannot be found
 
-通常是 working-directory 設錯。
+Your `working-directory` is wrong.
 
-### ❌ 3. 超過 Cache 限制（10 GB）
+### ❌ 3. Cache too large (>10GB)
 
-解法：刪除不必要的大型 cache。
+Delete unnecessary cache data or reduce what is being stored.
 
-### ❌ 4. 多個不同專案共用同一 Key
+### ❌ 4. Multiple projects sharing the same key
 
-例：
+Example:
 
 ```
 key: node
 ```
 
-→ 絕對會造成 cache 污染。
+This leads to cache pollution. Always use project-specific keys.
 
 ---
 
+## 📚 Official Documentation
 
-## 📚 官方文件
-
-* Cache 說明：[https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows](https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows)
-* actions/cache@v3：[https://github.com/actions/cache](https://github.com/actions/cache)
-
+* Cache overview:
+  [https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows](https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows)
+* `actions/cache`:
+  [https://github.com/actions/cache](https://github.com/actions/cache)
